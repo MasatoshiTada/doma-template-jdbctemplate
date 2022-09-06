@@ -37,7 +37,7 @@ public class TwoWayJdbcTemplate {
             String sql = Files.readString(sqlFile, StandardCharsets.UTF_8);
             SqlTemplate sqlTemplate = new SqlTemplate(sql, dialect);
             for (SqlParam param : params) {
-                sqlTemplate = sqlTemplate.add(param.name(), param.valueType(), param.value());
+                sqlTemplate = sqlTemplate.add(param.name(), param.valueType(), param.value());  // FIXME コンパイルエラー
             }
             SqlStatement sqlStatement = sqlTemplate.execute();
             List<SqlArgument> arguments = sqlStatement.getArguments();
