@@ -8,7 +8,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 import javax.sql.DataSource;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -42,7 +41,7 @@ public class TwoWayJdbcTemplateTest {
     @Test
     @DisplayName("queryForObjectでID検索ができる")
     public void test01() {
-        Employee actual = twoWayJdbcTemplate.queryForObject("com/example/selectEmpById.sql", Employee.class, new SqlParam("id", Integer.class, 2));
+        Employee actual = twoWayJdbcTemplate.queryForObject("com/example/selectEmpById.sql", Employee.class, new SqlParam<>("id", Integer.class, 2));
         Employee expected = new Employee(2, "Bob");
         assertEquals(expected, actual);
     }

@@ -27,7 +27,7 @@ public class TwoWayJdbcTemplate {
         this.dialect = dialect;
     }
     
-    public <T> T queryForObject(String sqlOnClassPath, Class<T> resultType, SqlParam... params) throws TwoWayJdbcException {
+    public <T> T queryForObject(String sqlOnClassPath, Class<T> resultType, SqlParam<?>... params) throws TwoWayJdbcException {
         URL sqlFileUrl = this.getClass().getClassLoader().getResource(sqlOnClassPath);
         if (sqlFileUrl == null) {
             throw new TwoWayJdbcException(sqlOnClassPath + " not found");
@@ -36,8 +36,10 @@ public class TwoWayJdbcTemplate {
             Path sqlFile = Path.of(sqlFileUrl.toURI());
             String sql = Files.readString(sqlFile, StandardCharsets.UTF_8);
             SqlTemplate sqlTemplate = new SqlTemplate(sql, dialect);
+            // TODO SqlParam<?>にするとコンパイルエラー
+            // TODO SqlParamにすると org.postgresql.util.PSQLException: org.seasar.doma.template.SqlArgument のインスタンスに対して使うべきSQL型を推測できません。明示的な Types 引数をとる setObject() で使うべき型を指定してください。
             for (SqlParam param : params) {
-                sqlTemplate = sqlTemplate.add(param.name(), param.valueType(), param.value());  // FIXME コンパイルエラー
+                sqlTemplate = sqlTemplate.add(param.name(), param.valueType(), param.value());
             }
             SqlStatement sqlStatement = sqlTemplate.execute();
             List<SqlArgument> arguments = sqlStatement.getArguments();
