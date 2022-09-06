@@ -1,7 +1,6 @@
 package com.example;
 
 import org.seasar.doma.jdbc.dialect.Dialect;
-import org.seasar.doma.template.SqlArgument;
 import org.seasar.doma.template.SqlStatement;
 import org.seasar.doma.template.SqlTemplate;
 import org.springframework.jdbc.core.DataClassRowMapper;
@@ -14,7 +13,6 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 
 public class TwoWayJdbcTemplate {
     
@@ -27,7 +25,7 @@ public class TwoWayJdbcTemplate {
         this.dialect = dialect;
     }
     
-    public <T> T queryForObject(String sqlOnClassPath, Class<T> resultType, SqlParam<?>... params) throws TwoWayJdbcException {
+    public <T> T queryForObject(String sqlOnClassPath, Class<T> resultType, SqlParam<?>... sqlParams) throws TwoWayJdbcException {
         URL sqlFileUrl = this.getClass().getClassLoader().getResource(sqlOnClassPath);
         if (sqlFileUrl == null) {
             throw new TwoWayJdbcException(sqlOnClassPath + " not found");
@@ -36,15 +34,16 @@ public class TwoWayJdbcTemplate {
             Path sqlFile = Path.of(sqlFileUrl.toURI());
             String sql = Files.readString(sqlFile, StandardCharsets.UTF_8);
             SqlTemplate sqlTemplate = new SqlTemplate(sql, dialect);
-            // TODO SqlParam<?>にするとコンパイルエラー
-            // TODO SqlParamにすると org.postgresql.util.PSQLException: org.seasar.doma.template.SqlArgument のインスタンスに対して使うべきSQL型を推測できません。明示的な Types 引数をとる setObject() で使うべき型を指定してください。
-            for (SqlParam param : params) {
-                sqlTemplate = sqlTemplate.add(param.name(), param.valueType(), param.value());
+            for (SqlParam sqlParam : sqlParams) {
+                sqlTemplate = sqlTemplate.add(sqlParam.name(), sqlParam.valueType(), sqlParam.value());
             }
             SqlStatement sqlStatement = sqlTemplate.execute();
-            List<SqlArgument> arguments = sqlStatement.getArguments();
+            Object[] params = sqlStatement.getArguments()
+                    .stream()
+                    .map(arg -> arg.getValue())
+                    .toArray();
             String rawSql = sqlStatement.getRawSql();
-            return jdbcTemplate.queryForObject(rawSql, new DataClassRowMapper<>(resultType), arguments.toArray());
+            return jdbcTemplate.queryForObject(rawSql, new DataClassRowMapper<>(resultType), params);
         } catch (URISyntaxException e) {
             throw new TwoWayJdbcException(e);
         } catch (IOException e) {
