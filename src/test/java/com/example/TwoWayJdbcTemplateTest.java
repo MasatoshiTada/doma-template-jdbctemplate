@@ -41,7 +41,7 @@ public class TwoWayJdbcTemplateTest {
     @Test
     @DisplayName("queryForObjectでID検索ができる")
     public void test01() {
-        Employee actual = twoWayJdbcTemplate.queryForObject("com/example/selectEmpById.sql", Employee.class, new SqlParam<>("id", Integer.class, 2));
+        Employee actual = twoWayJdbcTemplate.queryForObject("com/example/selectEmpById.sql", Employee.class, new SqlParam<>("id", 2));
         Employee expected = new Employee(2, "Bob");
         assertEquals(expected, actual);
     }
