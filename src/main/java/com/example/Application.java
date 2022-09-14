@@ -7,6 +7,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+/**
+ * @author Masatoshi Tada (@suke_masa)
+ */
 @SpringBootApplication
 public class Application {
 

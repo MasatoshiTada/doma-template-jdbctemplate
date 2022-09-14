@@ -1,18 +1,18 @@
 package com.example;
 
 import org.seasar.doma.jdbc.dialect.Dialect;
-import org.seasar.doma.jdbc.type.JdbcType;
 import org.seasar.doma.template.SqlStatement;
 import org.seasar.doma.template.SqlTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.DataClassRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.PreparedStatementCreator;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.StatementCreatorUtils;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 
-import javax.sql.DataSource;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -20,9 +20,15 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.util.List;
 
+/**
+ * 2-way SQLを利用した検索・追加・更新・削除を行うクラスです。
+ *
+ * @author Masatoshi Tada (@suke_masa)
+ * @see JdbcTemplate
+ * @see SqlTemplate
+ */
 public class TwoWayJdbcTemplate {
 
     private static final Logger logger = LoggerFactory.getLogger(TwoWayJdbcTemplate.class);
@@ -35,7 +41,18 @@ public class TwoWayJdbcTemplate {
         this.jdbcTemplate = jdbcTemplate;
         this.dialect = dialect;
     }
-    
+
+    /**
+     * SELECT文で検索を行って、結果を1件返します。
+     * TwoWayJdbcException以外に発生する例外は JdbcTemplate#queryForObject(String, RowMapper, Object...) と同じです。
+     *
+     * @param sqlOnClassPath SQLファイルのパス（クラスパス内のパスを指定）
+     * @param resultType 戻り値の型
+     * @param sqlParams SQLに指定するパラメータ値
+     * @return 検索結果
+     * @throws TwoWayJdbcException SQLファイルに関する異常があった場合
+     * @see JdbcTemplate#queryForObject(String, RowMapper, Object...)
+     */
     public <T> T queryForObject(String sqlOnClassPath, Class<T> resultType, SqlParam<?>... sqlParams) throws TwoWayJdbcException {
         SqlStatement sqlStatement = getSqlStatement(sqlOnClassPath, sqlParams);
         Object[] params = getParams(sqlStatement);
@@ -47,6 +64,17 @@ public class TwoWayJdbcTemplate {
         return result;
     }
 
+    /**
+     * SELECT文で検索を行って、結果を0件以上返します。
+     * TwoWayJdbcException以外に発生する例外は JdbcTemplate#query(String, RowMapper, Object...) と同じです。
+     *
+     * @param sqlOnClassPath SQLファイルのパス（クラスパス内のパスを指定）
+     * @param resultType 戻り値の型
+     * @param sqlParams SQLに指定するパラメータ値
+     * @return 検索結果
+     * @throws TwoWayJdbcException SQLファイルに関する異常があった場合
+     * @see JdbcTemplate#query(String, RowMapper, Object...)
+     */
     public <T> List<T> query(String sqlOnClassPath, Class<T> resultType, SqlParam<?>... sqlParams) throws TwoWayJdbcException {
         SqlStatement sqlStatement = getSqlStatement(sqlOnClassPath, sqlParams);
         Object[] params = getParams(sqlStatement);
@@ -58,6 +86,16 @@ public class TwoWayJdbcTemplate {
         return result;
     }
 
+    /**
+     * INSERT文・UPDATE文・DELETE文を実行します。
+     * TwoWayJdbcException以外に発生する例外は JdbcTemplate#update(String, Object...) と同じです。
+     *
+     * @param sqlOnClassPath SQLファイルのパス（クラスパス内のパスを指定）
+     * @param sqlParams SQLに指定するパラメータ値
+     * @return 更新した行数
+     * @throws TwoWayJdbcException SQLファイルに関する異常があった場合
+     * @see JdbcTemplate#update(String, Object...)
+     */
     public int update(String sqlOnClassPath, SqlParam<?>... sqlParams) {
         SqlStatement sqlStatement = getSqlStatement(sqlOnClassPath, sqlParams);
         Object[] params = getParams(sqlStatement);
@@ -69,6 +107,16 @@ public class TwoWayJdbcTemplate {
         return rows;
     }
 
+    /**
+     * INSERT文・UPDATE文・DELETE文を実行します。
+     * TwoWayJdbcException以外に発生する例外は JdbcTemplate#update(PreparedStatementCreator, KeyHolder) と同じです。
+     *
+     * @param sqlOnClassPath SQLファイルのパス（クラスパス内のパスを指定）
+     * @param sqlParams SQLに指定するパラメータ値
+     * @return 更新した行数と生成された主キー値を保持する UpdateResult
+     * @throws TwoWayJdbcException SQLファイルに関する異常があった場合
+     * @see JdbcTemplate#update(PreparedStatementCreator, KeyHolder)
+     */
     public UpdateResult updateAndGetKey(String sqlOnClassPath, String pkColumnName, SqlParam<?>... sqlParams) {
         SqlStatement sqlStatement = getSqlStatement(sqlOnClassPath, sqlParams);
         String rawSql = sqlStatement.getRawSql();

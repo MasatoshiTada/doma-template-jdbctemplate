@@ -1,5 +1,11 @@
 package com.example;
 
+/**
+ * SQLファイル関連の例外です。
+ *
+ * @author Masatoshi Tada (@suke_masa)
+ * @see TwoWayJdbcTemplate
+ */
 public class TwoWayJdbcException extends RuntimeException {
 
     public TwoWayJdbcException(String message) {
